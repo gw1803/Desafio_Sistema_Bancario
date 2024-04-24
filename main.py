@@ -27,7 +27,27 @@ while True:
         extrato += f"\nDepósito: R${float(valor)}"
 
     elif opcao =="s":
-        print("Saque")
+        if numero_saques >= LIMITE_SAQUES:
+            print("O limite de saques diários foi atigido")
+            continue
+        
+        valor = input("\nInforme o valor para saque: ")
+        valorF = float(valor)
+        if valorF<=0: 
+            print("\nValor para saque inválido")
+            continue
+        if(valorF>limite):
+            print("O valor requisitado está além do limite da conta.")
+            continue
+
+        elif(valorF>saldo):
+            print("Não é possível sacar o dinheiro por falta de saldo.")
+            continue
+
+        saldo -= valorF
+        extrato += f"\nSaque: R${valorF}"
+        numero_saques += 1
+        
     
     elif opcao =="e":
         if not extrato:
