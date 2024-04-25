@@ -1,26 +1,3 @@
-menu = """
-
-[c] Criar usuário
-[l] Listar usuários
-[o] Criar conta corrente
-[k] Listar contas
-[d] Depositar
-[s] Sacar
-[e] Extrato
-[q] Sair
-
-=> """
-
-saldo = 0.0
-limite = 500
-extrato = """"""
-numero_saques = 0
-LIMITE_SAQUES = 3
-AGENCIA = "0001"
-usuarios = []
-numero_contas = 0
-contas = []
-
 #keyword only
 def sacar(*, saldo, extrato, limite, numero_saques, limite_saques):
     if numero_saques >= LIMITE_SAQUES:
@@ -122,34 +99,58 @@ def listar_contas(contas):
         print("\nNenhuma conta cadastrada.")
     for conta in contas:
         print(f"\nNúmero : {conta["numero_conta"]}, Usuário: {conta["usuario"]["nome"]}")
-    
-while True:
 
-    opcao = input(menu)
+def main():
+    menu = """
 
-    if opcao == "c":
-       usuarios = criar_usuario(usuarios)
+    [c] Criar usuário
+    [l] Listar usuários
+    [o] Criar conta corrente
+    [k] Listar contas
+    [d] Depositar
+    [s] Sacar
+    [e] Extrato
+    [q] Sair
 
-    elif opcao == "l":
-        listar_usuarios(usuarios)
-    
-    elif opcao == "o":
-        contas, numero_contas = criar_conta_corrente(usuarios, numero_contas, AGENCIA, contas)
+    => """
 
-    elif opcao == "k":
-        listar_contas(contas)
+    saldo = 0.0
+    limite = 500
+    extrato = """"""
+    numero_saques = 0
+    LIMITE_SAQUES = 3
+    AGENCIA = "0001"
+    usuarios = []
+    numero_contas = 0
+    contas = []
 
-    elif opcao == "d":
-        saldo, extrato = despositar(saldo, extrato)
+    while True:
+        opcao = input(menu)
+        if opcao == "c":
+            usuarios = criar_usuario(usuarios)
 
-    elif opcao == "s":
-        saldo, extrato = sacar(saldo = saldo, extrato = extrato, limite = limite, numero_saques = numero_saques, limite_saques = LIMITE_SAQUES)
+        elif opcao == "l":
+            listar_usuarios(usuarios)
         
-    elif opcao == "e":
-        tirar_extrato(saldo, extrato=extrato)
+        elif opcao == "o":
+            contas, numero_contas = criar_conta_corrente(usuarios, numero_contas, AGENCIA, contas)
 
-    elif opcao =="q":
-        break
+        elif opcao == "k":
+            listar_contas(contas)
 
-    else:
-        print("\nOperação inválida, por favor selecione novamente\n")
+        elif opcao == "d":
+            saldo, extrato = despositar(saldo, extrato)
+
+        elif opcao == "s":
+            saldo, extrato = sacar(saldo = saldo, extrato = extrato, limite = limite, numero_saques = numero_saques, limite_saques = LIMITE_SAQUES)
+            
+        elif opcao == "e":
+            tirar_extrato(saldo, extrato=extrato)
+
+        elif opcao =="q":
+            break
+
+        else:
+            print("\nOperação inválida, por favor selecione novamente\n")
+
+main()
