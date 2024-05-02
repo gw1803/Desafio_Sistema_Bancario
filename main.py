@@ -1,4 +1,30 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
+import functools
+
+def decorador_de_log(funcao):
+    @functools.wraps(funcao)
+    def exibir_info(*args, **kwargs):
+        now = datetime.now()
+        tipoFuncao = None
+        match funcao.__name__:
+            case "registrar":
+                if funcao.__qualname__ == "Deposito.registrar":
+                    tipoFuncao = "Depósito"
+                elif funcao.__qualname__ == "Saque.registrar":
+                    tipoFuncao = "Saque"
+            case "tirar_extrato":
+                tipoFuncao = "Tirar extrato"
+            case "criar_cliente":
+                tipoFuncao = "Criar cliente"
+            case "criar_conta_corrente":
+                tipoFuncao = "Criar conta"
+
+        print(f"\nTentativa de {tipoFuncao} - Data: {now.date()} - Horário: {now.time()} ")
+
+        return funcao(*args, **kwargs)
+    
+    return exibir_info
 
 class Cliente():
     def __init__(self, endereco):
@@ -48,7 +74,7 @@ class Deposito(Transacao):
     @classmethod
     def Deposito(cls):
         return cls()
-
+    @decorador_de_log
     def registrar(self,conta):
         valorString = input("\nInforme o valor para depósito: ")
         self.valor = float(valorString)
@@ -62,7 +88,8 @@ class Saque(Transacao):
     @classmethod
     def Saque(cls, ):
         return cls()
-
+    
+    @decorador_de_log
     def registrar(self,conta):
         valorString = input("\nInforme o valor para saque: ")
         self.valor = float(valorString)
@@ -70,25 +97,35 @@ class Saque(Transacao):
 
 class Historico():
     def __init__(self, conteudo = ""):
-        self._conteudo = conteudo
+        self._conteudo = []
 
     @classmethod
     def Criar_Historico(cls):
         return cls()
-    
+
     @property
     def conteudo(self):
         return self._conteudo
 
+    def gerador_relatorio(self, tipo_transacao = None):
+               
+        for conteudo in self._conteudo:
+            if conteudo.get("tipo") == tipo_transacao or tipo_transacao == None:
+                yield conteudo
+    
     def adicionar_transacao(self, transacao):
-        if not self._conteudo:
-            self._conteudo = "====EXTRATO===="
-
-        if type(transacao) is Deposito:
-            self._conteudo += f"\nDepósito: R${transacao.valor}"
-        elif type(transacao) is Saque:
-            self._conteudo += f"\nSaque: R${transacao.valor}"        
-
+            tipo = None
+            if transacao.__class__.__name__ == "Deposito":
+                tipo = "Depósito"
+            else:
+                tipo = transacao.__class__.__name__
+            self._conteudo.append(
+                {
+                    "tipo": tipo,
+                    "valor": transacao.valor,
+                }
+            ) 
+         
 class Conta():
 
     def __init__(self, cliente, numero):
@@ -99,9 +136,10 @@ class Conta():
         self._historico = Historico.Criar_Historico()
         self._numero_saques = 0
  
-    @property
-    def tirar_extrato(self):
-        return self._historico.conteudo
+    @decorador_de_log
+    def tirar_extrato(self, tipo_transacao = None):
+        for i in self._historico.gerador_relatorio(tipo_transacao):
+            print(f"{i.get("tipo")} - R${i.get("valor")}")
     
     @property
     def numero(self):
@@ -151,14 +189,7 @@ class Conta_Corrente(Conta):
         self._numero_saques += 1
         return True
 
-def tirar_extrato(saldo,/,*,extrato):
-    if not extrato:
-        print("\nNão foram realizadas movimentações")
-        return None 
-
-    print(extrato)
-    print(f"Saldo atual R${float(saldo):0.2f}")
-
+@decorador_de_log
 def criar_cliente(clientes):
 
     nome = input("\nInsira o nome do cliente: ")
@@ -186,6 +217,7 @@ def criar_cliente(clientes):
     print("\nCliente criado com sucesso!")
     return clientes
 
+@decorador_de_log
 def criar_conta_corrente(clientes, numero_contas):
     cpf = input("\nInsira o cpf do usuário: ")
     c = None
@@ -247,6 +279,11 @@ def main():
     [q] Sair
     Entrada: """
 
+    menu_extrato = """
+    [d] = Exibir apenas depósitos
+    [s] = Exibir apenas saques
+    [Caracter] = Exibir tudo
+    Entrada: """
 
     while True:
         opcao = input(menu_1)
@@ -286,12 +323,18 @@ def main():
                         else:
                             print("\nNão foi possível concluir o saque.")
                     elif opcao2 == "e":
+                        opcao3 = input(f"\n{menu_extrato}")
+
+                        match opcao3:
+                            case "d":
+                                conta_atual.tirar_extrato("Depósito")
+                            case "s":
+                                conta_atual.tirar_extrato("Saque")
+                            case other:
+                                conta_atual.tirar_extrato()
+
                         print(f"\nSaldo atual = R${conta_atual.saldo}")
 
-                        if not conta_atual.tirar_extrato:
-                            print("\nNão há movimentações")
-                        else:
-                            print(conta_atual.tirar_extrato)
                     elif opcao2 == "q":
                         conta_atual = None
 
