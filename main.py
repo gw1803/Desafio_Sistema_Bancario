@@ -239,13 +239,30 @@ def listar_clientes(clientes):
     for cliente in clientes:
         print(f"\n\tNome : {cliente.nome}, CPF: {cliente.cpf}")
 
+class conta_iterador:
+    def __init__(self, contas):    
+        self.contas = contas
+        self.contador = 0
+    
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        try:
+            conta = self.contas[self.contador]
+            self.contador += 1
+            return f"\n\t{conta._numero}"
+        
+        except IndexError:
+            raise StopIteration
+
 def listar_contas(clientes):
     for cliente in clientes:
         contas = cliente.contas
-        for conta in contas:
-            print(f"\n\t{conta.numero} -> {cliente.nome}")
+        for conta in conta_iterador(contas):
+            print(f"\n\t{conta} -> {cliente.nome}")
 
-def entrar_na_conta( clientes):
+def entrar_na_conta(clientes):
     numero = float(input("\nInsira o número da conta: "))
     for cliente in clientes:
         for conta in cliente.contas:
