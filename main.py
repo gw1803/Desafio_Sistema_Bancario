@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 import functools
+from pathlib import Path
+
+ROOT_PATH = Path(__file__).parent
 
 def decorador_de_log(funcao):
     @functools.wraps(funcao)
@@ -20,9 +23,31 @@ def decorador_de_log(funcao):
             case "criar_conta_corrente":
                 tipoFuncao = "Criar conta"
 
-        print(f"\nTentativa de {tipoFuncao} - Data: {now.date()} - Horário: {now.time()} ")
+        argumentos = ""
+        for arg in args:
+            if argumentos:
+                    argumentos += " | "
+            if type(arg) is list:
+                argumentos += f"Lista de {arg[0].__class__.__name__}"  
+            elif type(arg) is int:
+                argumentos += f"Valor inteiro: {arg}"
+            else:  
+                argumentos += f"{arg.__repr__()}"
+        
+        ret = funcao(*args, **kwargs)
+        if type(ret) is list:
+            argumentos += f" - Lista de {arg[0].__class__.__name__}" 
+        else:
+            argumentos += f" - {ret}"
 
-        return funcao(*args, **kwargs)
+        try:
+            with open(ROOT_PATH / "log.txt", "a", encoding = "utf-8") as arquivo:
+                arquivo.write(f"{now.strftime("%Y/%m/%d - %H:%M:%S")} - {tipoFuncao} - {argumentos}\n")
+        except IOError as exc:
+            print("Erro")
+
+        
+        return ret
     
     return exibir_info
 
@@ -30,7 +55,7 @@ class Cliente():
     def __init__(self, endereco):
         self._endereco = endereco
         self._contas = []
-    
+
     @property
     def contas(self):
         return self._contas
@@ -47,6 +72,9 @@ class Pessoa_Fisica(Cliente):
         self._nome = nome
         self.data_nascimento = data_nascimento
         super().__init__(endereco)
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}: {self.nome}"
     
     @property
     def nome(self):
@@ -71,9 +99,13 @@ class Deposito(Transacao):
     def __init__(self):
         self.valor = 0
     
+    def __repr__(self):
+        return f"Transacao: {self.__class__.__name__}"
+
     @classmethod
     def Deposito(cls):
         return cls()
+
     @decorador_de_log
     def registrar(self,conta):
         valorString = input("\nInforme o valor para depósito: ")
@@ -84,6 +116,9 @@ class Saque(Transacao):
 
     def __init__(self):
         self.valor = 0
+    
+    def __repr__(self):
+        return f"Transacao: {self.__class__.__name__}"
     
     @classmethod
     def Saque(cls, ):
@@ -135,7 +170,10 @@ class Conta():
         self._cliente = cliente
         self._historico = Historico.Criar_Historico()
         self._numero_saques = 0
- 
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}: {self._cliente.nome}"
+
     @decorador_de_log
     def tirar_extrato(self, tipo_transacao = None):
         for i in self._historico.gerador_relatorio(tipo_transacao):
